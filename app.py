@@ -12,9 +12,9 @@ class HttpHandler(BaseHTTPRequestHandler):
         pr_url = urllib.parse.urlparse(self.path)
         match pr_url.path:
             case '/':
-                self.send_html_file('index.html')
+                self.send_html_file('templates/index.html')
             case '/message':
-                self.send_html_file('message.html')
+                self.send_html_file('templates/message.html')
             case _:
                 match pathlib.Path().joinpath(pr_url.path[1:]).exists():
                     case True:
@@ -23,14 +23,13 @@ class HttpHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         data = self.rfile.read(int(self.headers['Content-Length']))
-        logging.debug(f'{data=}')
         self.send_response(302)
         self.send_header('Location', '/')
         run_client(data)
         self.end_headers()
 
     def nothing_matched_function(self):
-        self.send_html_file('error.html', 404)
+        self.send_html_file('templates/error.html', 404)
 
     def send_html_file(self, filename, status=200):
         self.send_response(status)
