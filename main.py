@@ -1,7 +1,7 @@
 import logging
 import threading
 
-from app import run
+from http_handler import run
 from socket_app import run_server
 
 server = threading.Thread(target=run_server)  # Socket-server
