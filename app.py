@@ -1,21 +1,36 @@
+import logging
 import mimetypes
 import pathlib
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
+from socket_app import run_client
+
 
 class HttpHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         pr_url = urllib.parse.urlparse(self.path)
-        if pr_url.path == '/':
-            self.send_html_file('index.html')
-        elif pr_url.path == '/message':
-            self.send_html_file('message.html')
-        else:
-            if pathlib.Path().joinpath(pr_url.path[1:]).exists():
-                self.send_static()
-            else:
-                self.send_html_file('error.html', 404)
+        match pr_url.path:
+            case '/':
+                self.send_html_file('index.html')
+            case '/message':
+                self.send_html_file('message.html')
+            case _:
+                match pathlib.Path().joinpath(pr_url.path[1:]).exists():
+                    case True:
+                        self.send_static()
+                self.nothing_matched_function()
+
+    def do_POST(self):
+        data = self.rfile.read(int(self.headers['Content-Length']))
+        logging.debug(f'{data=}')
+        self.send_response(302)
+        self.send_header('Location', '/')
+        run_client(data)
+        self.end_headers()
+
+    def nothing_matched_function(self):
+        self.send_html_file('error.html', 404)
 
     def send_html_file(self, filename, status=200):
         self.send_response(status)
@@ -35,28 +50,12 @@ class HttpHandler(BaseHTTPRequestHandler):
         with open(f'.{self.path}', 'rb') as file:
             self.wfile.write(file.read())
 
-    def do_POST(self):
-        pr_url = urllib.parse.urlparse(self.path)
-        if pr_url.path == '/message':
-            data = self.rfile.read(int(self.headers['Content-Length']))
-            print(data)
-            data_parse = urllib.parse.unquote_plus(data.decode())
-            print(data_parse)
-            data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
-            print(data_dict)
-            self.send_response(302)
-            self.send_header('Location', '/')
-            self.end_headers()
-
 
 def run(server_class=HTTPServer, handler_class=HttpHandler):
     server_address = ('', 3000)
     http = server_class(server_address, handler_class)
+    logging.debug(f'http: {server_address=}')
     try:
         http.serve_forever()
     except KeyboardInterrupt:
         http.server_close()
-
-
-if __name__ == '__main__':
-    run()

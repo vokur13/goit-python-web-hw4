@@ -1,16 +1,15 @@
-# This is a sample Python script.
+import logging
+import threading
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from app import run
+from socket_app import run_server
 
+server = threading.Thread(target=run_server)  # Socket-server
+client = threading.Thread(target=run)  # HTTP-server
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    logging.basicConfig(level=logging.DEBUG, format='%(threadName)s %(message)s')
+    server.start()
+    client.start()
+    server.join()
+    client.join()
