@@ -9,6 +9,7 @@ client = threading.Thread(target=run)  # HTTP-server
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(threadName)s %(message)s')
+
     server.start()
     client.start()
     server.join()
